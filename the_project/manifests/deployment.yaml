@@ -16,3 +16,6 @@ spec:
       - image: the_project
         imagePullPolicy: Never
         name: the-project
+        env:
+        - name: PORT
+          value: "3000"

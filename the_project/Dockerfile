@@ -11,5 +11,6 @@ from alpine:latest
 workdir /root/
 
 copy --from=builder /app/the_project .
+copy --from=builder /app/static ./static
 
 cmd ["./the_project"]
