@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: randomhash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: randomhash
+  template:
+    metadata:
+      labels:
+        app: randomhash
+    spec:
+      containers:
+      - image: randomhash
+        imagePullPolicy: Never
+        name: randomhash
