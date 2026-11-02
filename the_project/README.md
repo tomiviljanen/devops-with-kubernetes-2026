@@ -4,6 +4,5 @@
 - `kubectl config use-context k3d-k3s-default`
 - `docker build -t the_project ./`
 - `k3d image import the_project`
-- `kubectl apply -f manifests/deployment.yaml`
-- `kubectl apply -f manifests/service.yaml`
+- `kubectl apply -f manifests/`
 - Access from `http://localhost:8082`
