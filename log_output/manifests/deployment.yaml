@@ -14,18 +14,19 @@ spec:
     spec:
       volumes:
       - name: shared-volume
-        emptyDir: {}
+        persistentVolumeClaim:
+            claimName: shared-claim
         
       containers:
-      - image: randomhash
-        imagePullPolicy: Never
-        name: randomhash
-        volumeMounts: # Mount volume
-          - name: shared-volume
-            mountPath: /usr/src/app/files
-        env:
-        - name: OUTPUT_DIR
-          value: "/usr/src/app/files/"
+#      - image: randomhash
+#        imagePullPolicy: Never
+#        name: randomhash
+#        volumeMounts: # Mount volume
+#          - name: shared-volume
+#            mountPath: /usr/src/app/files
+#        env:
+#        - name: OUTPUT_DIR
+#          value: "/usr/src/app/files/"
       - image: randomhash-server
         imagePullPolicy: Never
         name: randomhash-server

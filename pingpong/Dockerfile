@@ -11,5 +11,5 @@ from alpine:latest
 workdir /root/
 
 copy --from=builder /app/pingpong .
-
+RUN mkdir -p /usr/src/app/files
 cmd ["./pingpong"]

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,7 +15,14 @@ type Message struct {
 func handler(val *int) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		w.Write([]byte("pong " + strconv.Itoa((*val))))
+		numString := strconv.Itoa((*val))
+		w.Write([]byte("pong " + numString))
+
+		// 0644 gives the owner read/write permissions, and others read permissions
+		err := os.WriteFile(os.Getenv("OUTPUT_DIR")+"output.txt", ([]byte(numString)), 0644)
+		if err != nil {
+			log.Fatalf("Failed to write file: %s", err)
+		}
 		(*val)++
 	})
 }
