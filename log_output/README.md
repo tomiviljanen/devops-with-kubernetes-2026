@@ -4,5 +4,6 @@
 - `kubectl config use-context k3d-k3s-default`
 - `docker build -t randomhash ./randomhash/`
 - `k3d image import randomhash`
-- `kubectl apply -f manifests/deployment.yaml`
+- `kubectl apply -f manifests/`
 - `kubectl logs -f <pod-name>`
+- Access from `http://localhost:8082`

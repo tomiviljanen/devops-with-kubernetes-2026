@@ -16,3 +16,6 @@ spec:
       - image: randomhash
         imagePullPolicy: Never
         name: randomhash
+        env:
+        - name: PORT
+          value: "3000"
