@@ -12,10 +12,28 @@ spec:
       labels:
         app: randomhash
     spec:
+      volumes:
+      - name: shared-volume
+        emptyDir: {}
+        
       containers:
       - image: randomhash
         imagePullPolicy: Never
         name: randomhash
+        volumeMounts: # Mount volume
+          - name: shared-volume
+            mountPath: /usr/src/app/files
+        env:
+        - name: OUTPUT_DIR
+          value: "/usr/src/app/files/"
+      - image: randomhash-server
+        imagePullPolicy: Never
+        name: randomhash-server
+        volumeMounts: # Mount volume
+          - name: shared-volume
+            mountPath: /usr/src/app/files
         env:
         - name: PORT
           value: "3000"
+        - name: INPUT_DIR
+          value: "/usr/src/app/files/"
