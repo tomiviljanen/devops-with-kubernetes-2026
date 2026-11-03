@@ -5,4 +5,5 @@
 - `docker build -t the_project ./`
 - `k3d image import the_project`
 - `kubectl apply -f manifests/`
-- Access from `http://localhost:8082`
+- Make sure to apply shared ingress and volumes from root folder `kubectl apply -f shared/`
+- Access from `http://localhost:8081`

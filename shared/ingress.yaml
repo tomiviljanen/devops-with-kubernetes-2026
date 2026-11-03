@@ -4,19 +4,28 @@ metadata:
   name: shared-ingress
 spec:
   rules:
-  - http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: randomhash-svc
-            port:
-              number: 2345
-      - path: /pingpong
-        pathType: Prefix
-        backend:
-          service:
-            name: pingpong-svc
-            port:
-              number: 2345
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: the-project-svc
+                port:
+                  number: 2345
+
+          - path: /pingpong
+            pathType: Prefix
+            backend:
+              service:
+                name: pingpong-svc
+                port:
+                  number: 2345
+
+          - path: /randomhash
+            pathType: Prefix
+            backend:
+              service:
+                name: randomhash-svc
+                port:
+                  number: 2345

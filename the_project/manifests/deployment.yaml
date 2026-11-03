@@ -12,10 +12,19 @@ spec:
       labels:
         app: the-project
     spec:
+      volumes:
+      - name: shared-volume
+        persistentVolumeClaim:
+            claimName: shared-claim
       containers:
       - image: the_project
         imagePullPolicy: Never
         name: the-project
+        volumeMounts: # Mount volume
+          - name: shared-volume
+            mountPath: /usr/src/app/files
         env:
         - name: PORT
           value: "3000"
+        - name: IMAGE_PATH
+          value: "/usr/src/app/files/image.jpg"
