@@ -12,10 +12,6 @@ spec:
       labels:
         app: randomhash
     spec:
-      volumes:
-      - name: shared-volume
-        persistentVolumeClaim:
-            claimName: shared-claim
         
       containers:
 #      - image: randomhash
@@ -30,11 +26,8 @@ spec:
       - image: randomhash-server
         imagePullPolicy: Never
         name: randomhash-server
-        volumeMounts: # Mount volume
-          - name: shared-volume
-            mountPath: /usr/src/app/files
         env:
         - name: PORT
           value: "3000"
-        - name: INPUT_DIR
-          value: "/usr/src/app/files/"
+        - name: COUNT_URL
+          value: "http://pingpong-svc:2345/count"

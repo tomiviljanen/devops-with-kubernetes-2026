@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -17,13 +16,14 @@ func handler(val *int) http.Handler {
 
 		numString := strconv.Itoa((*val))
 		w.Write([]byte("pong " + numString))
-
-		// 0644 gives the owner read/write permissions, and others read permissions
-		err := os.WriteFile(os.Getenv("OUTPUT_DIR")+"output.txt", ([]byte(numString)), 0644)
-		if err != nil {
-			log.Fatalf("Failed to write file: %s", err)
-		}
 		(*val)++
+	})
+}
+
+func countHandler(val *int) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		numString := strconv.Itoa((*val))
+		w.Write([]byte(numString))
 	})
 }
 
@@ -36,5 +36,6 @@ func main() {
 	val := 0
 
 	http.Handle("/", handler(&val))
+	http.Handle("/count", countHandler(&val))
 	http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 }
