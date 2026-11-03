@@ -17,4 +17,8 @@
 - [1.11.](https://github.com/tomiviljanen/devops-with-kubernetes-2026/tree/1.11/log_output)
 - [1.12.](https://github.com/tomiviljanen/devops-with-kubernetes-2026/tree/1.12/the_project)
 - [1.13.](https://github.com/tomiviljanen/devops-with-kubernetes-2026/tree/1.13/the_project)
-- [1.14.](https://github.com/tomiviljanen/devops-with-kubernetes-2026/tree/1.14/log_output)
+
+
+## Chapter 3
+
+- [2.1.](https://github.com/tomiviljanen/devops-with-kubernetes-2026/tree/2.1/log_output)
