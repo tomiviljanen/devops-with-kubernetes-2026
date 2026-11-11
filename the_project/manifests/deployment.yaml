@@ -28,3 +28,9 @@ spec:
           value: "3000"
         - name: IMAGE_PATH
           value: "/usr/src/app/files/image.jpg"
+      - image: backend
+        imagePullPolicy: Never
+        name: backend
+        env:
+        - name: PORT
+          value: "8080"

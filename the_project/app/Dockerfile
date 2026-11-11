@@ -14,5 +14,6 @@ workdir /root/
 
 copy --from=builder /app/the_project .
 copy --from=builder /app/static ./static
+copy --from=builder /app/templates ./templates
 
 cmd ["./the_project"]
