@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: project-configmap
+  namespace: project
+data:
+  FILENAME: "todo.txt"
+  PICTURE_URL: "https://picsum.photos/400"
+  TODO_URL: "http://127.0.0.1:8080/todo"
+  TEMPLATE_LOCATION: "templates/index.html"

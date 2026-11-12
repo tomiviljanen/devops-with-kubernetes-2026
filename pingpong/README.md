@@ -8,4 +8,4 @@
 - `kubectl apply -f manifests/`
 - Make sure shared resources are applied from root directory `kubectl apply -f shared/`
 - `kubectl logs -f <pod-name>`
-- Access from `http://localhost:8082/pingpong`
+- Access from `http://localhost:8081/pingpong`

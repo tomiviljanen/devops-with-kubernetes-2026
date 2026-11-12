@@ -29,9 +29,29 @@ spec:
           value: "3000"
         - name: IMAGE_PATH
           value: "/usr/src/app/files/image.jpg"
+        - name: PICTURE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: project-configmap
+              key: PICTURE_URL
+        - name: TODO_URL
+          valueFrom:
+            configMapKeyRef:
+              name: project-configmap
+              key: TODO_URL
+        - name: TEMPLATE_LOCATION
+          valueFrom:
+            configMapKeyRef:
+              name: project-configmap
+              key: TEMPLATE_LOCATION
       - image: backend
         imagePullPolicy: Never
         name: backend
         env:
         - name: PORT
           value: "8080"
+        - name: FILENAME
+          valueFrom:
+            configMapKeyRef:
+              name: project-configmap
+              key: FILENAME

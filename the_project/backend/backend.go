@@ -9,6 +9,18 @@ import (
 	"time"
 )
 
+var (
+	filename = getFilename()
+)
+
+func getFilename() string {
+	filename := os.Getenv("FILENAME")
+	if filename == "" {
+		log.Fatal("FILENAME empty")
+	}
+	return filename
+}
+
 func SimpleLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -23,7 +35,7 @@ func SimpleLogger(next http.Handler) http.Handler {
 
 func handleGet() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		content, err := os.ReadFile("todo.txt")
+		content, err := os.ReadFile(filename)
 		if err != nil {
 			log.Printf("Error reading todo.txt: %v", err)
 			http.Error(w, "Could not read todos file", http.StatusInternalServerError)
@@ -44,7 +56,7 @@ func handlePost() http.Handler {
 			log.Printf("Error reading request body: %v", err)
 			log.Fatal(err)
 		}
-		f, err := os.OpenFile("todo.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			log.Printf("Error opening todo.txt for writing: %v", err)
 			log.Fatal(err)

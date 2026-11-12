@@ -22,13 +22,29 @@ type Message struct {
 	Text string `json:"text"`
 }
 
-const imageURL = "https://picsum.photos/400"
-
 var (
+	todoUrl       = getTodoUrl()
+	imageURL      = getImageUrl()
 	downloadMutex sync.Mutex
 	lastUpdate    time.Time
 	imagePath     = getImagePath()
 )
+
+func getTodoUrl() string {
+	todoUrl := os.Getenv("TODO_URL")
+	if todoUrl == "" {
+		log.Fatal("TODO_URL missing")
+	}
+	return todoUrl
+}
+
+func getImageUrl() string {
+	pictureUrl := os.Getenv("PICTURE_URL")
+	if pictureUrl == "" {
+		log.Fatal("PICTURE_URL missing")
+	}
+	return pictureUrl
+}
 
 func getImagePath() string {
 	if path := os.Getenv("IMAGE_PATH"); path != "" {
@@ -85,7 +101,7 @@ func filter[T any](ss []T, test func(T) bool) (ret []T) {
 }
 
 func getTodos() []string {
-	resp, err := http.Get("http://localhost:8080/todo")
+	resp, err := http.Get(todoUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -102,7 +118,11 @@ func getTodos() []string {
 
 func initTemplates() {
 	var err error
-	templates, err = template.ParseFiles("templates/index.html")
+	templateLocation := os.Getenv("TEMPLATE_LOCATION")
+	if templateLocation == "" {
+		log.Fatal("TEMPLATE_LOCATION missing")
+	}
+	templates, err = template.ParseFiles(templateLocation)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -115,7 +135,7 @@ type PageData struct {
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	data := PageData{
-		Port:  cmp.Or(os.Getenv("PORT"), "8080"), // Or your port variable/constant
+		Port:  cmp.Or(os.Getenv("PORT"), "8080"),
 		Todos: getTodos(),
 	}
 	err := templates.ExecuteTemplate(w, "index.html", data)
@@ -160,7 +180,7 @@ func handleProject() http.Handler {
 				return
 			}
 			log.Printf("Forwarding POST request to backend with body: %s", string(body))
-			resp, err := http.Post("http://127.0.0.1:8080/todo", "text/plain", bytes.NewBuffer(body))
+			resp, err := http.Post(todoUrl, "text/plain", bytes.NewBuffer(body))
 			if err != nil {
 				log.Printf("Error forwarding to backend: %v", err)
 				http.Error(w, "Error forwarding to backend", http.StatusInternalServerError)
