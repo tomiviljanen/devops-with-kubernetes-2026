@@ -10,4 +10,4 @@
 - `k3d image import randomhash-server`
 - `kubectl apply -f manifests/`
 - `kubectl logs -f <pod-name>`
-- Access from `http://localhost:8082`
+- Access from `http://localhost:8081/randomhash`

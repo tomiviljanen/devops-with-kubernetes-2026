@@ -13,7 +13,10 @@ spec:
       labels:
         app: randomhash
     spec:
-        
+      volumes:
+      - name: messages
+        configMap:
+          name: log-output-configmap
       containers:
 #      - image: randomhash
 #        imagePullPolicy: Never
@@ -27,8 +30,18 @@ spec:
       - image: randomhash-server
         imagePullPolicy: Never
         name: randomhash-server
+        volumeMounts:
+          - name: messages
+            mountPath: /usr/src/app/files
         env:
+        - name: MOUNT_PATH
+          value: "/usr/src/app/files/"
         - name: PORT
           value: "3000"
         - name: COUNT_URL
           value: "http://pingpong-svc:2345/count"
+        - name: MESSAGE
+          valueFrom:
+            configMapKeyRef:
+              name: log-output-configmap
+              key: MESSAGE
