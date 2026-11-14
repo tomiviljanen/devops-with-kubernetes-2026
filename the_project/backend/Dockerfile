@@ -2,6 +2,10 @@ FROM golang:1.26.8-alpine as builder
 
 WORKDIR /app
 
+copy go.mod go.sum ./
+run go mod download
+
+
 copy . .
 run go build -o backend backend.go
 

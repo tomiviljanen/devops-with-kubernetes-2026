@@ -1,25 +1,20 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	_ "github.com/lib/pq" // To register the driver.
 )
 
 var (
-	filename = getFilename()
+	Db *sql.DB
 )
-
-func getFilename() string {
-	filename := os.Getenv("FILENAME")
-	if filename == "" {
-		log.Fatal("FILENAME empty")
-	}
-	return filename
-}
 
 func SimpleLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -35,16 +30,34 @@ func SimpleLogger(next http.Handler) http.Handler {
 
 func handleGet() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		content, err := os.ReadFile(filename)
+		rows, err := Db.Query("SELECT todo from todo")
 		if err != nil {
-			log.Printf("Error reading todo.txt: %v", err)
-			http.Error(w, "Could not read todos file", http.StatusInternalServerError)
+			log.Printf("Error querying todos: %v", err)
+			http.Error(w, "Could not query todos", http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		var todos []string
+		for rows.Next() {
+			var t string
+			if err := rows.Scan(&t); err != nil {
+				log.Printf("Error scanning row: %v", err)
+				continue
+			}
+			todos = append(todos, t)
+		}
+
+		if err := rows.Err(); err != nil {
+			log.Printf("Error during rows iteration: %v", err)
+			http.Error(w, "Could not process todos", http.StatusInternalServerError)
 			return
 		}
 
-		log.Printf("Successfully read todo.txt")
 		w.Header().Set("Content-Type", "text/plain")
-		w.Write(content)
+		for _, t := range todos {
+			w.Write([]byte(t + "\n"))
+		}
 	})
 }
 
@@ -56,23 +69,35 @@ func handlePost() http.Handler {
 			log.Printf("Error reading request body: %v", err)
 			log.Fatal(err)
 		}
-		f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			log.Printf("Error opening todo.txt for writing: %v", err)
-			log.Fatal(err)
-		}
-		defer f.Close()
 
-		if _, err := f.Write(body); err != nil {
-			log.Printf("Error writing body to todo.txt: %v", err)
-			log.Fatal(err)
+		todoText := string(body)
+		_, err = Db.Exec("INSERT INTO todo (todo) VALUES ($1)", todoText)
+		if err != nil {
+			log.Printf("Error inserting into database: %v", err)
+			http.Error(w, "Could not save todo", http.StatusInternalServerError)
+			return
 		}
-		if _, err := f.WriteString("\n"); err != nil {
-			log.Printf("Error appending newline to todo.txt: %v", err)
-			log.Fatal(err)
-		}
-		log.Printf("Successfully wrote to todo.txt")
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte("Todo added successfully\n"))
 	})
+}
+
+func connectWithRetry(connStr string) *sql.DB {
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatalf("Invalid DB config: %v", err)
+	}
+
+	for {
+		err = db.Ping()
+		if err == nil {
+			log.Println("Connected to PostgreSQL!")
+			return db
+		}
+		log.Printf("Waiting for PostgreSQL to be ready (%v)... retrying in 2s", err)
+		time.Sleep(2 * time.Second)
+
+	}
 }
 
 func main() {
@@ -80,6 +105,25 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+
+	dbHost := os.Getenv("DB_HOST")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+
+	connStr := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s connect_timeout=5 sslmode=disable",
+		dbHost, dbUser, dbPassword, dbName,
+	)
+	Db = connectWithRetry(connStr)
+	defer Db.Close()
+	if _, err := Db.Exec("CREATE TABLE IF NOT EXISTS todo (id SERIAL PRIMARY KEY, todo TEXT)"); err != nil {
+		log.Fatalf("Failed to create table: %v", err)
+	}
+	if _, err := Db.Exec("INSERT INTO todo (id, todo) VALUES (1, 'initial todo') ON CONFLICT (id) DO NOTHING"); err != nil {
+		log.Fatalf("Failed to seed todo: %v", err)
+	}
+
 	mux := http.NewServeMux()
 
 	mux.Handle("GET /todo", handleGet())
