@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"time"
+	"unicode/utf8"
 
 	_ "github.com/lib/pq" // To register the driver.
 )
@@ -16,15 +19,59 @@ var (
 	Db *sql.DB
 )
 
+// LogEntry defines the structure of your JSON log output.
+type LogEntry struct {
+	Time     string              `json:"time"`
+	Method   string              `json:"method"`
+	Path     string              `json:"path"`
+	Query    map[string][]string `json:"query_params,omitempty"`
+	Body     any                 `json:"body,omitempty"`
+	Duration string              `json:"duration"`
+}
+
 func SimpleLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
-		// Serve the file
+		// 1. Capture GET / Query parameters
+		queryParams := r.URL.Query()
+
+		// 2. Safely capture the request body without consuming it permanently
+		var bodyData any
+		if r.Body != nil {
+			bodyBytes, err := io.ReadAll(r.Body)
+			if err == nil && len(bodyBytes) > 0 {
+				// IMPORTANT: Restore the body so downstream handlers can still read it
+				r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+				// Try to parse the body as JSON if applicable, otherwise keep as a string
+				var jsonMap map[string]any
+				if json.Unmarshal(bodyBytes, &jsonMap) == nil {
+					bodyData = jsonMap
+				} else {
+					bodyData = string(bodyBytes)
+				}
+			}
+		}
+
+		// Serve the next handler
 		next.ServeHTTP(w, r)
 
-		// Log the result
-		log.Printf("%s %s - %v", r.Method, r.URL.Path, time.Since(start))
+		// 3. Construct the log entry
+		entry := LogEntry{
+			Time:     start.Format(time.RFC3339),
+			Method:   r.Method,
+			Path:     r.URL.Path,
+			Query:    queryParams,
+			Body:     bodyData,
+			Duration: time.Since(start).String(),
+		}
+
+		// 4. Marshal and output as a JSON string
+		jsonBytes, err := json.Marshal(entry)
+		if err == nil {
+			log.Println(string(jsonBytes))
+		}
 	})
 }
 
@@ -64,13 +111,17 @@ func handleGet() http.Handler {
 func handlePost() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
-		log.Println("writing to todos.txt with", body)
 		if err != nil {
 			log.Printf("Error reading request body: %v", err)
 			log.Fatal(err)
 		}
 
 		todoText := string(body)
+		if utf8.RuneCountInString(todoText) > 140 {
+			log.Printf("Todo text over 140, skipping write to db")
+			http.Error(w, "Could not save todo", http.StatusBadRequest)
+			return
+		}
 		_, err = Db.Exec("INSERT INTO todo (todo) VALUES ($1)", todoText)
 		if err != nil {
 			log.Printf("Error inserting into database: %v", err)
@@ -130,5 +181,5 @@ func main() {
 	mux.Handle("POST /todo", handlePost())
 
 	fmt.Printf("Server started in port: %s\n", port)
-	http.ListenAndServe(fmt.Sprintf(":%s", port), mux)
+	http.ListenAndServe(fmt.Sprintf(":%s", port), SimpleLogger(mux))
 }
