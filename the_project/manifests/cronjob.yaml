@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: wiki-todo
+  namespace: project
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: wiki-todo
+            image: curlimages/curl:latest
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/sh
+            - -c
+            - |
+              WIKI_URL=$(curl -sI https://en.wikipedia.org/wiki/Special:Random | grep -i "^location:" | tr -d '\r' | awk '{print $2}')
+              if [ -z "$WIKI_URL" ]; then
+                echo "Error: Failed to retrieve random Wikipedia redirect URL." >&2
+                exit 1
+              fi
+
+              TODO_TEXT="Read $WIKI_URL"
+              curl -X POST http://backend-service:8080/todo \
+                   -H "Content-Type: text/plain" \
+                   -d "$TODO_TEXT"
+          restartPolicy: OnFailure
