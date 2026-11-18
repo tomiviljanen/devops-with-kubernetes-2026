@@ -1,11 +1,9 @@
 ### Steps
 
-- `k3d cluster create -a 2 --no-lb`
-- `kubectl config use-context k3d-k3s-default`
-- `docker exec k3d-k3s-default-agent-0 mkdir -p /tmp/kube`
+- Use your own google cloud account for this and make sure to create a project and a cluster
 - Make sure shared resources are applied from root directory `kubectl apply -f shared/`
 - `docker build -t randomhash ./pingpong/`
-- `k3d image import pingpong`
+- `docker tag pingpong <gcr-tag>`
 - `kubectl apply -f manifests/`
-- `kubectl logs -f <pod-name>`
-- Access from `http://localhost:8081/pingpong`
+- `kubectl get  svc -n exercises` 
+- Access from given ip
