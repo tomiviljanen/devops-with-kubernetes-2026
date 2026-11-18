@@ -14,8 +14,7 @@ spec:
         app: pingpong
     spec:
       containers:
-      - image: pingpong
-        imagePullPolicy: Never
+      - image: europe-west1-docker.pkg.dev/dwk-gke-514813/pingpong/pingpong:latest
         name: pingpong
         env:
         - name: PORT
