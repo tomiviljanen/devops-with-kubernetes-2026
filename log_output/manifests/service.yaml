@@ -4,7 +4,7 @@ metadata:
   name: randomhash-svc
   namespace: exercises
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: randomhash # This is the app as declared in the deployment.
   ports:
