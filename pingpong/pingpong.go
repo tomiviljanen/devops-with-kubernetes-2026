@@ -18,6 +18,17 @@ type Message struct {
 
 var Db *sql.DB
 
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		log.Printf("Incoming request: method=%s uri=%q host=%q remote=%s",
+			r.Method, r.URL.RequestURI(), r.Host, r.RemoteAddr)
+		next.ServeHTTP(w, r)
+		log.Printf("Completed request: method=%s uri=%q duration=%s",
+			r.Method, r.URL.RequestURI(), time.Since(start))
+	})
+}
+
 func handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -76,7 +87,14 @@ func main() {
 	if _, err := Db.Exec("INSERT INTO counters (id, val) VALUES (1, 0) ON CONFLICT (id) DO NOTHING"); err != nil {
 		log.Fatalf("Failed to seed counter: %v", err)
 	}
-	http.Handle("/", handler())
-	http.Handle("/count", countHandler())
-	http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
+
+	mux := http.NewServeMux()
+	mux.Handle("/", handler())
+	mux.Handle("/count", countHandler())
+
+	addr := fmt.Sprintf(":%s", port)
+	log.Printf("Starting server on %s", addr)
+	if err := http.ListenAndServe(addr, loggingMiddleware(mux)); err != nil {
+		log.Fatalf("Server failed: %v", err)
+	}
 }
