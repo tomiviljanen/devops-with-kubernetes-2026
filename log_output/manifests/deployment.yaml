@@ -27,8 +27,7 @@ spec:
 #        env:
 #        - name: OUTPUT_DIR
 #          value: "/usr/src/app/files/"
-      - image: randomhash-server
-        imagePullPolicy: Never
+      - image: europe-west1-docker.pkg.dev/dwk-gke-514813/randomhash/randomhash:latest
         name: randomhash-server
         volumeMounts:
           - name: messages
@@ -39,7 +38,7 @@ spec:
         - name: PORT
           value: "3000"
         - name: COUNT_URL
-          value: "http://pingpong-svc:2345/count"
+          value: "http://pingpong-svc:80/count"
         - name: MESSAGE
           valueFrom:
             configMapKeyRef:

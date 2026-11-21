@@ -14,7 +14,7 @@ spec:
               service:
                 name: pingpong-svc
                 port:
-                  number: 2345
+                  number: 80
 
           - path: /randomhash
             pathType: Prefix
@@ -22,4 +22,4 @@ spec:
               service:
                 name: randomhash-svc
                 port:
-                  number: 2345
+                  number: 80
